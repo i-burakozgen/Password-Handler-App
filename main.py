@@ -2,6 +2,23 @@ from tkinter import *
 from tkinter import messagebox
 from random import randint, choice,shuffle
 import pyperclip
+import json
+
+# ----- search -------#
+def search():
+    website = website_entry.get()
+    try:
+        with open("data.json", "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        messagebox.showinfo(f"Error", f"{website}  Not Found")
+
+    else:
+        if website in data:
+            email = data[website]["email"]
+            password = data[website]["password"]
+            messagebox.showinfo(f"{website}  Found", f"website: {website}  mail:{email}  password: {password}")
+
 
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
@@ -28,17 +45,30 @@ def save_information():
     website = website_entry.get()
     mail = email_entry.get()
     password = password_entry.get()
+    new_data = {
+        website: {
+            "email": mail,
+            "password": password,
+        }
+    }
 
     if not (password and website and mail):
         messagebox.showerror("Error", "Please enter your website and password !")
     else:
         is_ok = messagebox.askokcancel(title=website, message=f"Would you like to save informations Email: {mail} password: {password} ")
         if is_ok:
-            with open("data.txt", "a") as file:
-                data = f"{website} | {mail} | {password}\n"
-                file.writelines(data)
+            try:
+                with open("data.json", "r") as data_file:
+                    data = json.load(data_file)
+            except FileNotFoundError:
+                with open("data.json", "w") as data_file:
+                    json.dump(new_data, data_file, indent=4)
+            else:
+                data.update(new_data)
+                with open("data.json", "w") as data_file:
+                    json.dump(data, data_file, indent=4)
+            finally:
                 website_entry.delete(0, END)
-                email_entry.delete(0, END)
                 password_entry.delete(0, END)
 
 
@@ -64,7 +94,7 @@ password_label.grid(row = 3, column = 0)
 
 #Entries
 website_entry = Entry(width = 35)
-website_entry.grid(row = 1, column = 1, columnspan=2)
+website_entry.grid(row = 1, column = 1,columnspan=2)
 website_entry.focus()
 email_entry = Entry(width = 35)
 email_entry.insert(0, 'example@gmail.com')
@@ -77,6 +107,9 @@ add_button = Button(text="Add", width=35, command=save_information)
 add_button.grid(row = 4, column = 1, columnspan=2)
 Generate_password = Button(text="Generate", command=generate_password)
 Generate_password.grid(row = 3, column = 2)
+
+search_button = Button(text= "Search", command=search)
+search_button.grid(row = 1, column = 3)
 
 
 
